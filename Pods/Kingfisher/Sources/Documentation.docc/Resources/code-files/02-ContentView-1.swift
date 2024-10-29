@@ -1,10 +1,3 @@
-//
-//  ContentView.swift
-//  FetchRecipeApp
-//
-//  Created by Mustafa T. Mohammed on 10/25/24.
-//
-
 import SwiftUI
 
 struct ContentView: View {
@@ -17,8 +10,4 @@ struct ContentView: View {
         }
         .padding()
     }
-}
-
-#Preview {
-    ContentView()
 }
