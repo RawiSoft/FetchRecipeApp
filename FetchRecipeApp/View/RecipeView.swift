@@ -56,7 +56,7 @@ struct RecipeView: View {
 							.frame(maxWidth: .infinity, maxHeight: .infinity)
 					} else if case .error(let error) = viewModel.state {
 							// Error State
-						Text(error.localizedDescription)
+						Text(error.userMessage)
 							.foregroundColor(.red)
 							.padding()
 					} else if viewModel.state == .empty {

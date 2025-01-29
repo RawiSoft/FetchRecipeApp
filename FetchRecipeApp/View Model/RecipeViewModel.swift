@@ -117,7 +117,7 @@ class RecipeViewModel: ObservableObject {
 	 */
 	func fetchRecipes() async {
 		state = .loading
-		let result = await networkService.fetchRecipes(endPoint: .recipesData)
+		let result = await networkService.fetchRecipes(endPoint: EndPoint.allCases.randomElement()!)
 		switch result {
 			case .success(let recipes):
 				state = recipes.isEmpty ? .empty : .loaded(recipes)
