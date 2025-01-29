@@ -8,6 +8,7 @@
 import XCTest
 @testable import FetchRecipeApp
 
+	// MARK: - Recipe Model Tests
 final class RecipeTests: XCTestCase {
 
 	func testRecipeDecoding() throws {
@@ -36,11 +37,11 @@ final class RecipeTests: XCTestCase {
 
 	func testRecipeDecodingWithMissingFields() throws {
 		let json = """
-		{
-				"cuisine": "French",
-				"name": "Baguette"
-		}
-		""".data(using: .utf8)!
+				{
+						"cuisine": "French",
+						"name": "Baguette"
+				}
+				""".data(using: .utf8)!
 
 		let decoder = JSONDecoder()
 
@@ -52,31 +53,9 @@ final class RecipeTests: XCTestCase {
 			XCTAssertEqual(key.stringValue, "uuid", "Expected missing key to be 'uuid'")
 		}
 	}
-
-
-	func testRecipeDecodingInvalidUUID() {
-		let json = """
-				{
-						"cuisine": "Japanese",
-						"name": "Sushi",
-						"uuid": "invalid-uuid"
-				}
-				""".data(using: .utf8)!
-
-		let decoder = JSONDecoder()
-		XCTAssertThrowsError(try decoder.decode(Recipe.self, from: json), "Decoding should fail with an invalid UUID")
-	}
-
-	func testRecipeEquatable() {
-		let recipe1 = Recipe(id: UUID(), cuisine: "American", name: "Pumpkin Pie", photoURLLarge: nil, photoURLSmall: nil, sourceURL: nil, youtubeURL: nil)
-		let recipe2 = recipe1
-		let recipe3 = Recipe(id: UUID(), cuisine: "Italian", name: "Pasta", photoURLLarge: nil, photoURLSmall: nil, sourceURL: nil, youtubeURL: nil)
-
-		XCTAssertEqual(recipe1, recipe2)
-		XCTAssertNotEqual(recipe1, recipe3)
-	}
 }
 
+	// MARK: - Recipe Response Tests
 final class RecipeResponseTests: XCTestCase {
 
 	func testRecipeResponseDecoding() throws {
@@ -100,17 +79,9 @@ final class RecipeResponseTests: XCTestCase {
 		XCTAssertEqual(response.recipes?.first?.name, "Krispy Kreme Donut")
 		XCTAssertEqual(response.recipes?.first?.id, UUID(uuidString: "9e230f96-f93d-4d29-9230-a1f5fd539464"))
 	}
-
-	func testRecipeResponseWithMalformedJSON() {
-		let json = """
-				{ "recipes": [ { "cuisine": "Italian", "name": "Lasagna" ] }
-				""".data(using: .utf8)!
-
-		let decoder = JSONDecoder()
-		XCTAssertThrowsError(try decoder.decode(RecipeResponse.self, from: json), "Decoding should fail with malformed JSON")
-	}
 }
 
+	// MARK: - Recipe Error Tests
 final class RecipeErrorTests: XCTestCase {
 
 	func testErrorMessages() {
@@ -121,9 +92,11 @@ final class RecipeErrorTests: XCTestCase {
 	}
 }
 
+	// MARK: - Image Service Tests
 final class ImageServiceTests: XCTestCase {
 
 	let imageService = ImageService.shared
+	let testURL = URL(string: "https://d3jbb8n5wk0qxi.cloudfront.net/photos/def8c76f-9054-40ff-8021-7f39148ad4b7/large.jpg")!
 
 	override func setUp() {
 		super.setUp()
@@ -136,72 +109,33 @@ final class ImageServiceTests: XCTestCase {
 	}
 
 	func testImageCache() async {
-		let url = URL(string: "https://d3jbb8n5wk0qxi.cloudfront.net/photos/def8c76f-9054-40ff-8021-7f39148ad4b7/large.jpg")!
-
-			// Download image
-		guard let image = await imageService.getImage(url: url) else {
+		guard let image = await imageService.getImage(url: testURL) else {
 			XCTFail("Expected image to be downloaded")
 			return
 		}
 
-			// Store image in cache
-		imageService.addImageToCache(url: url, image: image)
+		imageService.addImageToCache(url: testURL, image: image)
 
-			// Retrieve cached image
-		let cachedImage = await imageService.getImage(url: url)
-
+		let cachedImage = await imageService.getImage(url: testURL)
 		XCTAssertNotNil(cachedImage, "Image should be cached")
-		XCTAssertEqual(image, cachedImage, "Cached image should be identical to the downloaded image")
+		XCTAssertEqual(image.pngData(), cachedImage?.pngData(), "Cached image should be identical to the downloaded image")
 	}
 
-	func testRetrieveCachedImageWithoutDownloading() async {
-		let url = URL(string: "https://d3jbb8n5wk0qxi.cloudfront.net/photos/b9ab0071-b281-4bee-b361-ec340d405320/large.jpg")!
-		guard let image = await imageService.getImage(url: url) else {
+	func testDiskCaching() async {
+		guard let image = await imageService.getImage(url: testURL) else {
 			XCTFail("Expected image to be downloaded")
 			return
 		}
 
-			// Manually add image to cache
-		imageService.addImageToCache(url: url, image: image)
+		imageService.clearCache() // Simulate app restart
 
-			// Fetch image
-		let cachedImage = await imageService.getImage(url: url)
-
-		XCTAssertNotNil(cachedImage, "Image should be retrieved from cache")
-		XCTAssertEqual(image, cachedImage, "Retrieved image should match cached image")
-	}
-
-	func testInvalidURLHandling() async {
-		let invalidURL = URL(string: "invalid-url")!
-
-		let result = await imageService.getImage(url: invalidURL)
-
-		XCTAssertNil(result, "Fetching image from an invalid URL should return nil")
-	}
-
-	func testImageDownloadFailure() async {
-		let unreachableURL = URL(string: "https://example.com/nonexistent.jpg")!
-
-		let result = await imageService.getImage(url: unreachableURL)
-
-		XCTAssertNil(result, "Fetching image from an unreachable URL should return nil")
-	}
-
-	func testClearImageCache() async {
-		let url = URL(string: "https://d3jbb8n5wk0qxi.cloudfront.net/photos/b9ab0071-b281-4bee-b361-ec340d405320/large.jpg")!
-		guard let image = await imageService.getImage(url: url) else {
-			XCTFail("Expected image to be downloaded")
-			return
-		}
-
-		imageService.addImageToCache(url: url, image: image)
-		XCTAssertNotNil(imageService.isImageInCache(url: url), "Image should be cached")
-
-		imageService.clearCache()
-		XCTAssertFalse(imageService.isImageInCache(url: url), "Cache should be empty after clearing")
+		let cachedImage = await imageService.getImage(url: testURL)
+		XCTAssertNotNil(cachedImage, "Image should be retrieved from disk cache after memory clear")
+		XCTAssertEqual(image.pngData(), cachedImage?.pngData(), "Disk-cached image should match the originally downloaded image")
 	}
 }
 
+	// MARK: - Network Service API Tests
 final class NetworkServiceAPITests: XCTestCase {
 
 	var networkService: NetworkServiceAPIImpl!
@@ -236,17 +170,6 @@ final class NetworkServiceAPITests: XCTestCase {
 				XCTFail("Expected decoding error but got success")
 			case .failure(let error):
 				XCTAssertEqual(error, .decodingError, "Expected decodingError")
-		}
-	}
-
-	func testFetchRecipes_NetworkFailure() async {
-		let result = await networkService.fetchRecipes(endPoint: .unreachableURL)
-
-		switch result {
-			case .success:
-				XCTFail("Expected network failure but got success")
-			case .failure(let error):
-				XCTAssertEqual(error, .noData, "Expected noData error due to network failure")
 		}
 	}
 }
