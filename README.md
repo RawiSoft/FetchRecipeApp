@@ -15,4 +15,16 @@ This approach ensures that the app remains responsive, modular, and easy to main
 1 hour building UI views and implementing state management.
 1 hour on testing, debugging, and documentation.
 
-### Trade-offs and Decisions: Did you make any significant trade-offs in your approach?
+### Trade-offs and Decisions:
+I used custom image caching to have more contol instead of relying on URLSession caching.
+The ImageService uses a singleton pattern.
+
+While this simplifies access, it makes testing harder and prevents dependency injection. 
+A dependency-injected instance would be more testable.
+
+Using CodingKeys in Recipe means that any backend change in key names could break decoding, but I used it for simplicity.
+A more flexible approach (e.g., JSONSerialization with optional lookups) might be better for handling evolving APIs.
+
+### Weakest Part of the Project:
+I think it is the error handling, it needs logging, and properly handling all the senarios, currently it covers the main senarios.
+
