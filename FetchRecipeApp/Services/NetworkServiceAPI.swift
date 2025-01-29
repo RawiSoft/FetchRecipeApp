@@ -61,7 +61,7 @@ enum EndPoint: Codable, CaseIterable {
 	case recipesData
 	case malformedData
 	case emptyData
-
+	case unreachableURL
 	/**
 	 The URL string associated with each endpoint.
 
@@ -75,6 +75,8 @@ enum EndPoint: Codable, CaseIterable {
 				return "https://d3jbb8n5wk0qxi.cloudfront.net/recipes-malformed.json"
 			case .emptyData:
 				return "https://d3jbb8n5wk0qxi.cloudfront.net/recipes-empty.json"
+			case .unreachableURL:
+				return "https://google.con"
 		}
 	}
 }

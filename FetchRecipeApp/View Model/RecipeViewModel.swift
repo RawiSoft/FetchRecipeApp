@@ -146,7 +146,7 @@ class RecipeViewModel: ObservableObject {
 	 */
 	private func mapError(_ error: NetworkServiceError) -> RecipeError {
 		switch error {
-			case .invalidURL, .noData:
+			case .noData:
 				return .networkError
 			case .decodingError:
 				return .decodingError

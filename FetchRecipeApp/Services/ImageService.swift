@@ -72,4 +72,31 @@ class ImageService {
 			// Return nil if the image cannot be fetched
 		return nil
 	}
+	/**
+	 Checks if an image is already stored in the in-memory cache.
+
+	 - Parameter url: The URL of the image to check.
+	 - Returns: `true` if the image is cached, otherwise `false`.
+	 */
+	func isImageInCache(url: URL) -> Bool {
+		let cacheKey = url.absoluteString as NSString
+		return cache.object(forKey: cacheKey) != nil
+	}
+	/**
+	 Adds an image to the in-memory cache.
+
+	 - Parameters:
+	 - url: The URL associated with the image.
+	 - image: The `UIImage` to be stored in cache.
+	 */
+	func addImageToCache(url: URL, image: UIImage) {
+		let cacheKey = url.absoluteString as NSString
+		cache.setObject(image, forKey: cacheKey)
+	}
+	/**
+	 Clears all cached images from memory.
+	 */
+	func clearCache() {
+		cache.removeAllObjects()
+	}
 }
